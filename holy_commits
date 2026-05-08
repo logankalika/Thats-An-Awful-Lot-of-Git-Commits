@@ -1,0 +1,84 @@
+#import subprocess library to run terminal commands
+import subprocess
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+
+#dictionary to store the users username, password, and repo_url locally
+config = {}
+
+#defines the path of to store the config locally
+creds = Path('creds.txt')
+
+#function to ask user for details to setup the program
+def setup():
+    config['username'] = input("Enter your Github username to use:")
+
+    config['password'] = input("Enter your Github password to use:")
+
+    config['repo_url'] = input("Enter your Github repo link to use:")
+
+def auto_write():
+    #defines the current date/time in the now variable
+    now = datetime.now()
+    #stores the formatted date/time in the dt_string variable
+    dt_string = now.strftime("%Y-%m-%d %H: %M: %S")
+    #opens the holy_commits.txt file to edit it
+    with open("holy_commits.txt", "a") as f:
+        #writes the users details to be stored locally for automated commits
+        f.write(f"Commit at: {dt_string}\n")
+    return dt_string
+
+def storing_creds():
+    git_username = config['username']
+    git_password = config['password']
+    
+    content = f"{git_username}\n{git_ssh_key}"
+
+    creds.write_text(content)
+
+    
+
+def terminal_git_commands(dt_string):
+    git_username = config['username']
+    git_password = config['password']
+    git_repo = config['repo_url'].split("/")[-1].replace(".git", "")
+    #try to run the git commands checking each one if it worked
+    try:
+        subprocess.run(["git", "init"], check=True)
+        subprocess.run(["git", "add", "."], check=True)
+        #makes the commit message the current date/time that is formatted
+        subprocess.run(["git", "commit", "-m", f"Commit at {dt_string}"], check=True),
+        #formats the username, password and repo link to work with github via shell commands
+        remote_url = f"https://{git_username}:{git_password}@github.com/{git_username}/{git_repo}.git"
+        #inputs the users username, password and repo link capturing the output result
+        remotes = subprocess.run(["git", "remote"], capture_output=True, text=True).stdout
+        #tries to use set-url to add the repo
+        if "origin" in remotes:
+            subprocess.run([f"git", "remote", "set-url", "origin", remote_url], check=True)
+        #if set-url does not work try to use add
+        else:
+            subprocess.run(["git", "remote", "add", "origin", remote_url], check=True)
+        #sets to commit to the main branch
+        subprocess.run(["git", "branch", "-M", "main"], check=True)
+        #pushes the commit
+        subprocess.run(["git", "push", "-u", "origin", "main"], check=True)
+        #message if successful
+        print(f"successfully pushed: {dt_string}")
+    #message if there is an error
+    except subprocess.CalledProcessError as e:
+        print(f"Error during git commands: {e}")
+        
+#puts the pieces together to run it all
+def main():
+    #starts with initial setup
+    setup()
+    #after initial setup simply loop the program forever
+    while True:
+        timestamp = auto_write()
+        terminal_git_commands(timestamp)
+        #waits an hour before repeating to commit again
+        time.sleep(600)
+    
+if __name__ == "__main__":
+    main()
