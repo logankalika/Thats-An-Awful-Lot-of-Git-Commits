@@ -14,3 +14,4 @@ Steps to Use
        'Enter your GitHub password' ```Example123```
        'Enter your Github repo link' ```https://github.com/logankalika/Thats-An-Awful-Lot-of-Git-Commits/edit/main/README.md```
 6. Leave the program running to have it automatically commit every 6 hours
+   
